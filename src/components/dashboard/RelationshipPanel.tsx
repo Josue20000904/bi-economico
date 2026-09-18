@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-
 import {
   Activity,
   Clock3,
@@ -10,6 +9,8 @@ import {
   Sigma,
   TriangleAlert,
 } from "lucide-react";
+
+import { RelationshipScatterChart } from "@/components/charts/RelationshipScatterChart";
 
 import {
   companyMetricOptions,
@@ -37,22 +38,6 @@ type RelationshipPanelProps = {
   filters: DashboardFiltersState;
 };
 
-function getPeriodRange(period: string) {
-  const parts = period.split("-").map(Number);
-
-  if (parts.length === 1) {
-    return {
-      startYear: parts[0],
-      endYear: parts[0],
-    };
-  }
-
-  return {
-    startYear: parts[0],
-    endYear: parts[1],
-  };
-}
-
 function formatDecimal(value: number) {
   return value.toFixed(2).replace(".", ",");
 }
@@ -79,9 +64,8 @@ export function RelationshipPanel({
     const economicIndicator =
       filters.economicIndicator as EconomicIndicatorKey;
 
-    const { startYear, endYear } = getPeriodRange(
-      filters.period,
-    );
+    const startYear = Number(filters.startYear);
+    const endYear = Number(filters.endYear);
 
     const historicalData = createDemoHistoricalData(
       filters.company,
@@ -140,7 +124,8 @@ export function RelationshipPanel({
     filters.companyMetric,
     filters.economicIndicator,
     filters.lag,
-    filters.period,
+    filters.startYear,
+    filters.endYear,
   ]);
 
   const companyMetricLabel =
@@ -182,7 +167,7 @@ export function RelationshipPanel({
         </div>
 
         <span className="self-start rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 sm:self-auto">
-          Base estatística trimestral
+          {filters.startYear} a {filters.endYear} · Base trimestral
         </span>
       </div>
 
@@ -264,6 +249,14 @@ export function RelationshipPanel({
             Pares válidos utilizados no cálculo.
           </p>
         </article>
+      </div>
+
+      <div className="mt-6">
+        <RelationshipScatterChart
+          points={analysis.relationshipPoints}
+          xLabel={economicIndicatorLabel}
+          yLabel={companyMetricLabel}
+        />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_0.7fr]">
