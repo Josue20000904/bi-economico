@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import { RelationshipPanel } from "@/components/dashboard/RelationshipPanel";
 import { DashboardFilters } from "@/components/filters/DashboardFilters";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { OverviewPanel } from "@/components/dashboard/OverviewPanel";
@@ -15,6 +15,8 @@ const initialFilters: DashboardFiltersState = {
   segment: "energia",
   company: "PETR4",
   period: "2019-2025",
+  startYear: "2019",
+  endYear: "2025",
   companyMetric: "receita",
   economicIndicator: "selic",
   lag: "automatico",
@@ -97,8 +99,10 @@ export function DashboardShell() {
 
       <div className="mt-6">
         {activeView === "overview" ? (
-          <OverviewPanel filters={filters} />
-        ) : (
+    <OverviewPanel filters={filters} />
+    ) : activeView === "relations" ? (
+    <RelationshipPanel filters={filters} />
+    ) : (
           <div className="rounded-2xl border border-dashed border-white/10 bg-[#07111f]/60 p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">
               {currentView.eyebrow}

@@ -12,8 +12,8 @@ import {
   economicIndicatorOptions,
   frequencyOptions,
   lagOptions,
-  periodOptions,
   segmentOptions,
+  yearOptions,
 } from "@/data/dashboardOptions";
 
 import type {
@@ -76,6 +76,16 @@ export function DashboardFilters({
   const companyOptions =
     companyOptionsBySegment[filters.segment] ?? [];
 
+  const startYearOptions = yearOptions.filter(
+    (year) =>
+      Number(year.value) <= Number(filters.endYear),
+  );
+
+  const endYearOptions = yearOptions.filter(
+    (year) =>
+      Number(year.value) >= Number(filters.startYear),
+  );
+
   function updateFilter(
     field: keyof DashboardFiltersState,
     value: string,
@@ -88,6 +98,38 @@ export function DashboardFilters({
         ...filters,
         segment: value,
         company: firstCompany,
+      });
+
+      return;
+    }
+
+    if (field === "startYear") {
+      const endYear =
+        Number(value) > Number(filters.endYear)
+          ? value
+          : filters.endYear;
+
+      onChange({
+        ...filters,
+        startYear: value,
+        endYear,
+        period: `${value}-${endYear}`,
+      });
+
+      return;
+    }
+
+    if (field === "endYear") {
+      const startYear =
+        Number(value) < Number(filters.startYear)
+          ? value
+          : filters.startYear;
+
+      onChange({
+        ...filters,
+        startYear,
+        endYear: value,
+        period: `${startYear}-${value}`,
       });
 
       return;
@@ -113,7 +155,7 @@ export function DashboardFilters({
             </h3>
 
             <p className="text-sm text-slate-500">
-              Personalize a empresa, o período e a relação econômica.
+              Personalize a empresa, o intervalo e a relação econômica.
             </p>
           </div>
         </div>
@@ -128,7 +170,7 @@ export function DashboardFilters({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <FilterSelect
           label="Segmento"
           value={filters.segment}
@@ -148,11 +190,20 @@ export function DashboardFilters({
         />
 
         <FilterSelect
-          label="Período"
-          value={filters.period}
-          options={periodOptions}
+          label="Ano inicial"
+          value={filters.startYear}
+          options={startYearOptions}
           onChange={(value) =>
-            updateFilter("period", value)
+            updateFilter("startYear", value)
+          }
+        />
+
+        <FilterSelect
+          label="Ano final"
+          value={filters.endYear}
+          options={endYearOptions}
+          onChange={(value) =>
+            updateFilter("endYear", value)
           }
         />
 

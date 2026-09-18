@@ -7,6 +7,8 @@ export type DashboardFiltersState = {
   segment: string;
   company: string;
   period: string;
+  startYear: string;
+  endYear: string;
   companyMetric: string;
   economicIndicator: string;
   lag: string;

@@ -8,10 +8,7 @@ import {
 import { HistoricalChart } from "@/components/charts/HistoricalChart";
 import { KpiCard } from "@/components/ui/KpiCard";
 
-import {
-  companyOptionsBySegment,
-  periodOptions,
-} from "@/data/dashboardOptions";
+import { companyOptionsBySegment } from "@/data/dashboardOptions";
 
 import type { DashboardFiltersState } from "@/types/dashboard";
 
@@ -67,9 +64,9 @@ export function OverviewPanel({
     )?.label ?? filters.company;
 
   const periodLabel =
-    periodOptions.find(
-      (period) => period.value === filters.period,
-    )?.label ?? filters.period;
+  filters.startYear === filters.endYear
+    ? filters.startYear
+    : `${filters.startYear} a ${filters.endYear}`;
 
   return (
     <section>
