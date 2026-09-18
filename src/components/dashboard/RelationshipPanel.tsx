@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+
 import {
   Activity,
   Clock3,
@@ -17,11 +18,12 @@ import {
   economicIndicatorOptions,
 } from "@/data/dashboardOptions";
 
-import {
-  createDemoHistoricalData,
-  type CompanyMetricKey,
-  type EconomicIndicatorKey,
+import type {
+  CompanyMetricKey,
+  EconomicIndicatorKey,
 } from "@/data/historicalData";
+
+import { useDashboardHistoricalData } from "@/hooks/useDashboardHistoricalData";
 
 import {
   analyzeLags,
@@ -39,6 +41,10 @@ type RelationshipPanelProps = {
 };
 
 function formatDecimal(value: number) {
+  if (!Number.isFinite(value)) {
+    return "0,00";
+  }
+
   return value.toFixed(2).replace(".", ",");
 }
 
@@ -57,6 +63,14 @@ function formatLag(lag: number) {
 export function RelationshipPanel({
   filters,
 }: RelationshipPanelProps) {
+  const {
+    historicalData,
+    hasRealEconomicData,
+    isEconomicDataLoading,
+    economicDataError,
+    isEconomicDataSupported,
+  } = useDashboardHistoricalData(filters);
+
   const analysis = useMemo(() => {
     const companyMetric =
       filters.companyMetric as CompanyMetricKey;
@@ -67,38 +81,43 @@ export function RelationshipPanel({
     const startYear = Number(filters.startYear);
     const endYear = Number(filters.endYear);
 
-    const historicalData = createDemoHistoricalData(
-      filters.company,
-    ).filter(
-      (point) =>
-        point.year >= startYear &&
-        point.year <= endYear,
-    );
+    const filteredHistoricalData =
+      historicalData.filter(
+        (point) =>
+          point.year >= startYear &&
+          point.year <= endYear,
+      );
 
     const lagResults = analyzeLags(
-      historicalData,
+      filteredHistoricalData,
       companyMetric,
       economicIndicator,
       [0, 1, 2, 4],
     );
 
-    const bestLagResult = findBestLag(lagResults);
+    const bestLagResult =
+      findBestLag(lagResults);
 
     const selectedLag =
       filters.lag === "automatico"
         ? (bestLagResult?.lag ?? 0)
         : Number(filters.lag);
 
-    const relationshipPoints = createLaggedPairs(
-      historicalData,
-      companyMetric,
-      economicIndicator,
-      selectedLag,
-    );
+    const relationshipPoints =
+      createLaggedPairs(
+        filteredHistoricalData,
+        companyMetric,
+        economicIndicator,
+        selectedLag,
+      );
 
     const correlation = pearsonCorrelation(
-      relationshipPoints.map((point) => point.x),
-      relationshipPoints.map((point) => point.y),
+      relationshipPoints.map(
+        (point) => point.x,
+      ),
+      relationshipPoints.map(
+        (point) => point.y,
+      ),
     );
 
     const classification =
@@ -120,12 +139,12 @@ export function RelationshipPanel({
       regression,
     };
   }, [
-    filters.company,
     filters.companyMetric,
     filters.economicIndicator,
     filters.lag,
     filters.startYear,
     filters.endYear,
+    historicalData,
   ]);
 
   const companyMetricLabel =
@@ -137,7 +156,8 @@ export function RelationshipPanel({
   const economicIndicatorLabel =
     economicIndicatorOptions.find(
       (option) =>
-        option.value === analysis.economicIndicator,
+        option.value ===
+        analysis.economicIndicator,
     )?.label ?? analysis.economicIndicator;
 
   const correlationColor =
@@ -161,15 +181,37 @@ export function RelationshipPanel({
           </h3>
 
           <p className="mt-1 text-sm text-slate-500">
-            Associação histórica considerando diferentes
-            defasagens temporais.
+            Associação histórica considerando
+            diferentes defasagens temporais.
           </p>
         </div>
 
-        <span className="self-start rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 sm:self-auto">
-          {filters.startYear} a {filters.endYear} · Base trimestral
+        <span
+          className={`self-start rounded-full border px-3 py-1.5 text-xs sm:self-auto ${
+            hasRealEconomicData
+              ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+              : "border-white/10 bg-white/5 text-slate-300"
+          }`}
+        >
+          {isEconomicDataLoading &&
+          isEconomicDataSupported
+            ? "Carregando Banco Central..."
+            : hasRealEconomicData
+              ? `${filters.startYear} a ${filters.endYear} · Indicador real · BCB`
+              : `${filters.startYear} a ${filters.endYear} · Indicador simulado`}
         </span>
       </div>
+
+      {economicDataError &&
+        isEconomicDataSupported && (
+          <div className="mb-5 rounded-xl border border-rose-400/15 bg-rose-400/[0.05] px-4 py-3">
+            <p className="text-sm text-rose-300">
+              Não foi possível consultar o Banco
+              Central. A análise está utilizando
+              temporariamente o indicador simulado.
+            </p>
+          </div>
+        )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-2xl border border-white/10 bg-[#07111f] p-5">
@@ -184,11 +226,16 @@ export function RelationshipPanel({
           <p
             className={`mt-1 text-2xl font-semibold ${correlationColor}`}
           >
-            {formatDecimal(analysis.correlation)}
+            {formatDecimal(
+              analysis.correlation,
+            )}
           </p>
 
           <p className="mt-2 text-xs text-slate-500">
-            {analysis.classification.interpretation}
+            {
+              analysis.classification
+                .interpretation
+            }
           </p>
         </article>
 
@@ -203,7 +250,8 @@ export function RelationshipPanel({
 
           <p className="mt-1 text-2xl font-semibold text-white">
             {formatLag(
-              analysis.bestLagResult?.lag ?? 0,
+              analysis.bestLagResult?.lag ??
+                0,
             )}
           </p>
 
@@ -228,7 +276,8 @@ export function RelationshipPanel({
           </p>
 
           <p className="mt-2 text-xs text-slate-500">
-            Proporção da variação explicada linearmente.
+            Proporção da variação explicada
+            linearmente.
           </p>
         </article>
 
@@ -242,7 +291,10 @@ export function RelationshipPanel({
           </p>
 
           <p className="mt-1 text-2xl font-semibold text-white">
-            {analysis.relationshipPoints.length}
+            {
+              analysis.relationshipPoints
+                .length
+            }
           </p>
 
           <p className="mt-2 text-xs text-slate-500">
@@ -253,7 +305,9 @@ export function RelationshipPanel({
 
       <div className="mt-6">
         <RelationshipScatterChart
-          points={analysis.relationshipPoints}
+          points={
+            analysis.relationshipPoints
+          }
           xLabel={economicIndicatorLabel}
           yLabel={companyMetricLabel}
         />
@@ -267,8 +321,9 @@ export function RelationshipPanel({
             </h4>
 
             <p className="mt-1 text-sm text-slate-500">
-              Quanto tempo o indicador econômico pode levar
-              para se associar ao resultado.
+              Quanto tempo o indicador econômico
+              pode levar para se associar ao
+              resultado.
             </p>
           </div>
 
@@ -299,72 +354,79 @@ export function RelationshipPanel({
               </thead>
 
               <tbody>
-                {analysis.lagResults.map((result) => {
-                  const isSelected =
-                    result.lag === analysis.selectedLag;
+                {analysis.lagResults.map(
+                  (result) => {
+                    const isSelected =
+                      result.lag ===
+                      analysis.selectedLag;
 
-                  const barColor =
-                    result.correlation >= 0
-                      ? "bg-emerald-400"
-                      : "bg-rose-400";
+                    const barColor =
+                      result.correlation >= 0
+                        ? "bg-emerald-400"
+                        : "bg-rose-400";
 
-                  return (
-                    <tr
-                      key={result.lag}
-                      className={`border-b border-white/5 last:border-b-0 ${
-                        isSelected
-                          ? "bg-amber-400/[0.06]"
-                          : ""
-                      }`}
-                    >
-                      <td className="px-5 py-4 text-sm text-slate-200">
-                        {formatLag(result.lag)}
-
-                        {isSelected && (
-                          <span className="ml-2 rounded-full bg-amber-400/10 px-2 py-1 text-[10px] font-semibold uppercase text-amber-300">
-                            Selecionada
-                          </span>
-                        )}
-                      </td>
-
-                      <td
-                        className={`px-5 py-4 text-sm font-semibold ${
-                          result.correlation >= 0
-                            ? "text-emerald-400"
-                            : "text-rose-400"
+                    return (
+                      <tr
+                        key={result.lag}
+                        className={`border-b border-white/5 last:border-b-0 ${
+                          isSelected
+                            ? "bg-amber-400/[0.06]"
+                            : ""
                         }`}
                       >
-                        {formatDecimal(
-                          result.correlation,
-                        )}
-                      </td>
+                        <td className="px-5 py-4 text-sm text-slate-200">
+                          {formatLag(
+                            result.lag,
+                          )}
 
-                      <td className="px-5 py-4">
-                        <div className="h-2 w-28 overflow-hidden rounded-full bg-white/5">
-                          <div
-                            className={`h-full rounded-full ${barColor}`}
-                            style={{
-                              width: `${Math.max(
-                                4,
-                                result.absoluteCorrelation *
-                                  100,
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </td>
+                          {isSelected && (
+                            <span className="ml-2 rounded-full bg-amber-400/10 px-2 py-1 text-[10px] font-semibold uppercase text-amber-300">
+                              Selecionada
+                            </span>
+                          )}
+                        </td>
 
-                      <td className="px-5 py-4 text-sm text-slate-400">
-                        {result.strength}{" "}
-                        {result.direction}
-                      </td>
+                        <td
+                          className={`px-5 py-4 text-sm font-semibold ${
+                            result.correlation >= 0
+                              ? "text-emerald-400"
+                              : "text-rose-400"
+                          }`}
+                        >
+                          {formatDecimal(
+                            result.correlation,
+                          )}
+                        </td>
 
-                      <td className="px-5 py-4 text-right text-sm text-slate-400">
-                        {result.observations}
-                      </td>
-                    </tr>
-                  );
-                })}
+                        <td className="px-5 py-4">
+                          <div className="h-2 w-28 overflow-hidden rounded-full bg-white/5">
+                            <div
+                              className={`h-full rounded-full ${barColor}`}
+                              style={{
+                                width: `${Math.max(
+                                  4,
+                                  result.absoluteCorrelation *
+                                    100,
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-4 text-sm text-slate-400">
+                          {result.strength}{" "}
+                          {result.direction}
+                        </td>
+
+                        <td className="px-5 py-4 text-right text-sm text-slate-400">
+                          {
+                            result.observations
+                          }
+                        </td>
+                      </tr>
+                    );
+                  },
+                )}
               </tbody>
             </table>
           </div>
@@ -383,10 +445,12 @@ export function RelationshipPanel({
                 </h4>
 
                 <p className="mt-2 text-sm leading-6 text-slate-300">
-                  A maior associação foi encontrada com{" "}
+                  A maior associação foi
+                  encontrada com{" "}
                   <strong className="text-white">
                     {formatLag(
-                      analysis.bestLagResult?.lag ?? 0,
+                      analysis.bestLagResult
+                        ?.lag ?? 0,
                     )}
                   </strong>
                   , apresentando correlação de{" "}
@@ -415,12 +479,27 @@ export function RelationshipPanel({
                 </h4>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Correlação histórica não demonstra causalidade.
-                  Outros fatores podem explicar o comportamento
-                  observado.
+                  Correlação histórica não
+                  demonstra causalidade. Outros
+                  fatores podem explicar o
+                  comportamento observado.
                 </p>
               </div>
             </div>
+          </article>
+
+          <article className="rounded-2xl border border-white/10 bg-[#07111f] p-5">
+            <h4 className="font-semibold text-white">
+              Origem dos dados
+            </h4>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Os resultados empresariais ainda são
+              simulados para desenvolvimento.
+              {hasRealEconomicData
+                ? ` O indicador ${economicIndicatorLabel} foi obtido do Banco Central do Brasil.`
+                : ` O indicador ${economicIndicatorLabel} permanece simulado nesta versão.`}
+            </p>
           </article>
         </div>
       </div>
