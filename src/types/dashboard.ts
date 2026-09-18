@@ -10,4 +10,10 @@ export type DashboardFiltersState = {
   companyMetric: string;
   economicIndicator: string;
   lag: string;
+  frequency: string;
 };
+
+export type DashboardView =
+  | "overview"
+  | "relations"
+  | "diagnostics";

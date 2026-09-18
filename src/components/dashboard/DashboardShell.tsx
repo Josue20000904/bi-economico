@@ -18,6 +18,7 @@ const initialFilters: DashboardFiltersState = {
   companyMetric: "receita",
   economicIndicator: "selic",
   lag: "automatico",
+  frequency: "trimestral",
 };
 
 const viewContent: Record<

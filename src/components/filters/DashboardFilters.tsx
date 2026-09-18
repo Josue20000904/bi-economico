@@ -1,11 +1,16 @@
 "use client";
 
-import { ChevronDown, RotateCcw, SlidersHorizontal } from "lucide-react";
+import {
+  ChevronDown,
+  RotateCcw,
+  SlidersHorizontal,
+} from "lucide-react";
 
 import {
   companyMetricOptions,
   companyOptionsBySegment,
   economicIndicatorOptions,
+  frequencyOptions,
   lagOptions,
   periodOptions,
   segmentOptions,
@@ -68,7 +73,8 @@ export function DashboardFilters({
   onChange,
   onReset,
 }: DashboardFiltersProps) {
-  const companyOptions = companyOptionsBySegment[filters.segment] ?? [];
+  const companyOptions =
+    companyOptionsBySegment[filters.segment] ?? [];
 
   function updateFilter(
     field: keyof DashboardFiltersState,
@@ -122,26 +128,32 @@ export function DashboardFilters({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7">
         <FilterSelect
           label="Segmento"
           value={filters.segment}
           options={segmentOptions}
-          onChange={(value) => updateFilter("segment", value)}
+          onChange={(value) =>
+            updateFilter("segment", value)
+          }
         />
 
         <FilterSelect
           label="Empresa"
           value={filters.company}
           options={companyOptions}
-          onChange={(value) => updateFilter("company", value)}
+          onChange={(value) =>
+            updateFilter("company", value)
+          }
         />
 
         <FilterSelect
           label="Período"
           value={filters.period}
           options={periodOptions}
-          onChange={(value) => updateFilter("period", value)}
+          onChange={(value) =>
+            updateFilter("period", value)
+          }
         />
 
         <FilterSelect
@@ -166,7 +178,18 @@ export function DashboardFilters({
           label="Defasagem"
           value={filters.lag}
           options={lagOptions}
-          onChange={(value) => updateFilter("lag", value)}
+          onChange={(value) =>
+            updateFilter("lag", value)
+          }
+        />
+
+        <FilterSelect
+          label="Frequência"
+          value={filters.frequency}
+          options={frequencyOptions}
+          onChange={(value) =>
+            updateFilter("frequency", value)
+          }
         />
       </div>
     </section>

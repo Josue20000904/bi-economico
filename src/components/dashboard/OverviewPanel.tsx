@@ -5,6 +5,7 @@ import {
   Percent,
 } from "lucide-react";
 
+import { HistoricalChart } from "@/components/charts/HistoricalChart";
 import { KpiCard } from "@/components/ui/KpiCard";
 
 import {
@@ -23,7 +24,8 @@ const demonstrationKpis = [
     title: "Receita líquida",
     value: "R$ 124,6 bi",
     change: "8,4%",
-    description: "Variação em relação ao período anterior.",
+    description:
+      "Variação em relação ao período anterior.",
     trend: "up" as const,
     icon: BadgeDollarSign,
   },
@@ -31,7 +33,8 @@ const demonstrationKpis = [
     title: "EBITDA",
     value: "R$ 52,1 bi",
     change: "5,7%",
-    description: "Resultado operacional antes dos principais ajustes.",
+    description:
+      "Resultado operacional antes dos principais ajustes.",
     trend: "up" as const,
     icon: ChartColumnIncreasing,
   },
@@ -39,7 +42,8 @@ const demonstrationKpis = [
     title: "Lucro líquido",
     value: "R$ 26,8 bi",
     change: "3,2%",
-    description: "Variação em relação ao período anterior.",
+    description:
+      "Variação em relação ao período anterior.",
     trend: "down" as const,
     icon: CircleDollarSign,
   },
@@ -47,7 +51,8 @@ const demonstrationKpis = [
     title: "Margem EBITDA",
     value: "41,8%",
     change: "1,1 p.p.",
-    description: "Participação do EBITDA sobre a receita líquida.",
+    description:
+      "Participação do EBITDA sobre a receita líquida.",
     trend: "down" as const,
     icon: Percent,
   },
@@ -79,7 +84,8 @@ export function OverviewPanel({
           </h3>
 
           <p className="mt-1 text-sm text-slate-500">
-            Indicadores selecionados para o período de {periodLabel}.
+            Indicadores selecionados para o período de{" "}
+            {periodLabel}.
           </p>
         </div>
 
@@ -101,6 +107,8 @@ export function OverviewPanel({
           />
         ))}
       </div>
+
+      <HistoricalChart filters={filters} />
     </section>
   );
 }

@@ -69,3 +69,8 @@ export const lagOptions: FilterOption[] = [
   { value: "2", label: "2 trimestres" },
   { value: "4", label: "4 trimestres" },
 ];
+
+export const frequencyOptions: FilterOption[] = [
+  { value: "trimestral", label: "Trimestral" },
+  { value: "anual", label: "Anual" },
+];
