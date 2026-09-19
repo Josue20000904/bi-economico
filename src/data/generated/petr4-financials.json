@@ -1,0 +1,301 @@
+{
+  "company": {
+    "ticker": "PETR4",
+    "name": "Petrobras",
+    "cnpj": "33000167000101"
+  },
+  "source": "Comissão de Valores Mobiliários - CVM",
+  "documents": [
+    "ITR",
+    "DFP"
+  ],
+  "generatedAt": "2026-09-19T00:07:51.605Z",
+  "metrics": [
+    "receita",
+    "lucro",
+    "margem",
+    "divida"
+  ],
+  "data": [
+    {
+      "label": "T1/2019",
+      "year": 2019,
+      "quarter": 1,
+      "receita": 79.999,
+      "lucro": 4.24,
+      "margem": 5.3,
+      "divida": 413.078,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2019",
+      "year": 2019,
+      "quarter": 2,
+      "receita": 63.424,
+      "lucro": 19.352,
+      "margem": 30.51,
+      "divida": 387.162,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2019",
+      "year": 2019,
+      "quarter": 3,
+      "receita": 77.051,
+      "lucro": 8.84,
+      "margem": 11.47,
+      "divida": 374.381,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2019",
+      "year": 2019,
+      "quarter": 4,
+      "receita": 81.771,
+      "lucro": 8.538,
+      "margem": 10.44,
+      "divida": 351.161,
+      "source": "CVM DFP"
+    },
+    {
+      "label": "T1/2020",
+      "year": 2020,
+      "quarter": 1,
+      "receita": 75.469,
+      "lucro": -49.724,
+      "margem": -65.89,
+      "divida": 463.916,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2020",
+      "year": 2020,
+      "quarter": 2,
+      "receita": 50.898,
+      "lucro": -2.813,
+      "margem": -5.53,
+      "divida": 499.555,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2020",
+      "year": 2020,
+      "quarter": 3,
+      "receita": 70.73,
+      "lucro": -1.669,
+      "margem": -2.36,
+      "divida": 448.929,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2020",
+      "year": 2020,
+      "quarter": 4,
+      "receita": 74.972,
+      "lucro": 60.452,
+      "margem": 80.63,
+      "divida": 392.548,
+      "source": "CVM DFP"
+    },
+    {
+      "label": "T1/2021",
+      "year": 2021,
+      "quarter": 1,
+      "receita": 86.174,
+      "lucro": 1.276,
+      "margem": 1.48,
+      "divida": 404.316,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2021",
+      "year": 2021,
+      "quarter": 2,
+      "receita": 110.71,
+      "lucro": 43.041,
+      "margem": 38.88,
+      "divida": 318.569,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2021",
+      "year": 2021,
+      "quarter": 3,
+      "receita": 121.594,
+      "lucro": 31.224,
+      "margem": 25.68,
+      "divida": 324.124,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2021",
+      "year": 2021,
+      "quarter": 4,
+      "receita": 134.19,
+      "lucro": 31.723,
+      "margem": 23.64,
+      "divida": 327.818,
+      "source": "CVM DFP"
+    },
+    {
+      "label": "T1/2022",
+      "year": 2022,
+      "quarter": 1,
+      "receita": 141.641,
+      "lucro": 44.783,
+      "margem": 31.62,
+      "divida": 277.418,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2022",
+      "year": 2022,
+      "quarter": 2,
+      "receita": 170.96,
+      "lucro": 54.484,
+      "margem": 31.87,
+      "divida": 280.637,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2022",
+      "year": 2022,
+      "quarter": 3,
+      "receita": 170.076,
+      "lucro": 46.236,
+      "margem": 27.19,
+      "divida": 293.403,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2022",
+      "year": 2022,
+      "quarter": 4,
+      "receita": 158.579,
+      "lucro": 43.502,
+      "margem": 27.43,
+      "divida": 280.703,
+      "source": "CVM DFP"
+    },
+    {
+      "label": "T1/2023",
+      "year": 2023,
+      "quarter": 1,
+      "receita": 139.068,
+      "lucro": 38.307,
+      "margem": 27.55,
+      "divida": 271.031,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2023",
+      "year": 2023,
+      "quarter": 2,
+      "receita": 113.84,
+      "lucro": 28.936,
+      "margem": 25.42,
+      "divida": 279.375,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2023",
+      "year": 2023,
+      "quarter": 3,
+      "receita": 124.828,
+      "lucro": 26.76,
+      "margem": 21.44,
+      "divida": 305.451,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2023",
+      "year": 2023,
+      "quarter": 4,
+      "receita": 134.258,
+      "lucro": 31.163,
+      "margem": 23.21,
+      "divida": 303.062,
+      "source": "CVM DFP"
+    },
+    {
+      "label": "T1/2024",
+      "year": 2024,
+      "quarter": 1,
+      "receita": 117.721,
+      "lucro": 23.81,
+      "margem": 20.23,
+      "divida": 308.955,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2024",
+      "year": 2024,
+      "quarter": 2,
+      "receita": 122.258,
+      "lucro": -2.515,
+      "margem": -2.06,
+      "divida": 331.473,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2024",
+      "year": 2024,
+      "quarter": 3,
+      "receita": 129.582,
+      "lucro": 32.676,
+      "margem": 25.22,
+      "divida": 322.157,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2024",
+      "year": 2024,
+      "quarter": 4,
+      "receita": 121.268,
+      "lucro": -16.962,
+      "margem": -13.99,
+      "divida": 373.467,
+      "source": "CVM DFP"
+    },
+    {
+      "label": "T1/2025",
+      "year": 2025,
+      "quarter": 1,
+      "receita": 123.144,
+      "lucro": 35.331,
+      "margem": 28.69,
+      "divida": 370.314,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T2/2025",
+      "year": 2025,
+      "quarter": 2,
+      "receita": 119.128,
+      "lucro": 26.774,
+      "margem": 22.47,
+      "divida": 371.437,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T3/2025",
+      "year": 2025,
+      "quarter": 3,
+      "receita": 127.906,
+      "lucro": 32.847,
+      "margem": 25.68,
+      "divida": 376.083,
+      "source": "CVM ITR"
+    },
+    {
+      "label": "T4/2025",
+      "year": 2025,
+      "quarter": 4,
+      "receita": 127.371,
+      "lucro": 15.653,
+      "margem": 12.29,
+      "divida": 384.025,
+      "source": "CVM DFP"
+    }
+  ]
+}
