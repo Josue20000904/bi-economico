@@ -31,8 +31,8 @@ import {
   createLaggedPairs,
   findBestLag,
   linearRegression,
-  pearsonCorrelation,
 } from "@/lib/analytics";
+import type { AnalysisOptions } from "@/lib/analytics";
 
 import type { DashboardFiltersState } from "@/types/dashboard";
 
@@ -40,9 +40,9 @@ type RelationshipPanelProps = {
   filters: DashboardFiltersState;
 };
 
-function formatDecimal(value: number) {
-  if (!Number.isFinite(value)) {
-    return "0,00";
+function formatDecimal(value: number | null) {
+  if (value === null || !Number.isFinite(value)) {
+    return "—";
   }
 
   return value.toFixed(2).replace(".", ",");
@@ -66,9 +66,13 @@ export function RelationshipPanel({
   const {
     historicalData,
     hasRealEconomicData,
+    economicData,
     isEconomicDataLoading,
     economicDataError,
     isEconomicDataSupported,
+    hasRealCompanyData,
+    companyDataSource,
+    companyDataError,
   } = useDashboardHistoricalData(filters);
 
   const analysis = useMemo(() => {
@@ -81,18 +85,37 @@ export function RelationshipPanel({
     const startYear = Number(filters.startYear);
     const endYear = Number(filters.endYear);
 
-    const filteredHistoricalData =
-      historicalData.filter(
-        (point) =>
-          point.year >= startYear &&
-          point.year <= endYear,
-      );
+    const realEconomicLabels = new Set(
+      economicData?.data
+        .filter((point) => Number.isFinite(point.value))
+        .map((point) => point.label) ?? [],
+    );
+
+    // Conserva o ano anterior para a defasagem no início do período.
+    // Na presença de dados reais, uma lacuna do BCB não vira valor simulado.
+    const preparedData = historicalData
+      .filter((point) => point.year <= endYear)
+      .map((point) => ({
+        ...point,
+        [economicIndicator]:
+          (isEconomicDataSupported && isEconomicDataLoading) ||
+          (hasRealEconomicData && !realEconomicLabels.has(point.label))
+            ? NaN
+            : point[economicIndicator],
+      }));
+
+    const options: AnalysisOptions = {
+      frequency: filters.frequency === "anual" ? "anual" : "trimestral",
+      startYear,
+      endYear,
+    };
 
     const lagResults = analyzeLags(
-      filteredHistoricalData,
+      preparedData,
       companyMetric,
       economicIndicator,
       [0, 1, 2, 4],
+      options,
     );
 
     const bestLagResult =
@@ -105,27 +128,27 @@ export function RelationshipPanel({
 
     const relationshipPoints =
       createLaggedPairs(
-        filteredHistoricalData,
+        preparedData,
         companyMetric,
         economicIndicator,
         selectedLag,
+        options,
       );
 
-    const correlation = pearsonCorrelation(
-      relationshipPoints.map(
-        (point) => point.x,
-      ),
-      relationshipPoints.map(
-        (point) => point.y,
-      ),
+    const selectedLagResult = lagResults.find(
+      (result) => result.lag === selectedLag,
     );
+    const correlation = selectedLagResult?.valid
+      ? selectedLagResult.correlation
+      : null;
 
-    const classification =
-      classifyCorrelation(correlation);
+    const classification = correlation === null
+      ? null
+      : classifyCorrelation(correlation);
 
-    const regression = linearRegression(
-      relationshipPoints,
-    );
+    const regression = correlation === null
+      ? null
+      : linearRegression(relationshipPoints);
 
     return {
       companyMetric,
@@ -133,10 +156,13 @@ export function RelationshipPanel({
       lagResults,
       bestLagResult,
       selectedLag,
+      selectedLagResult,
       relationshipPoints,
       correlation,
       classification,
       regression,
+      hasEconomicCoverage: hasRealEconomicData &&
+        lagResults.some((result) => result.observations > 0),
     };
   }, [
     filters.companyMetric,
@@ -144,7 +170,12 @@ export function RelationshipPanel({
     filters.lag,
     filters.startYear,
     filters.endYear,
+    filters.frequency,
     historicalData,
+    economicData,
+    hasRealEconomicData,
+    isEconomicDataLoading,
+    isEconomicDataSupported,
   ]);
 
   const companyMetricLabel =
@@ -161,9 +192,9 @@ export function RelationshipPanel({
     )?.label ?? analysis.economicIndicator;
 
   const correlationColor =
-    analysis.correlation > 0
+    analysis.correlation !== null && analysis.correlation > 0
       ? "text-emerald-400"
-      : analysis.correlation < 0
+      : analysis.correlation !== null && analysis.correlation < 0
         ? "text-rose-400"
         : "text-slate-400";
 
@@ -188,7 +219,7 @@ export function RelationshipPanel({
 
         <span
           className={`self-start rounded-full border px-3 py-1.5 text-xs sm:self-auto ${
-            hasRealEconomicData
+            analysis.hasEconomicCoverage
               ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
               : "border-white/10 bg-white/5 text-slate-300"
           }`}
@@ -196,8 +227,10 @@ export function RelationshipPanel({
           {isEconomicDataLoading &&
           isEconomicDataSupported
             ? "Carregando Banco Central..."
-            : hasRealEconomicData
+            : analysis.hasEconomicCoverage
               ? `${filters.startYear} a ${filters.endYear} · Indicador real · BCB`
+              : hasRealEconomicData
+                ? `${filters.startYear} a ${filters.endYear} · BCB sem pares válidos`
               : `${filters.startYear} a ${filters.endYear} · Indicador simulado`}
         </span>
       </div>
@@ -212,6 +245,17 @@ export function RelationshipPanel({
             </p>
           </div>
         )}
+
+      {companyDataError && (
+        <p className="mb-5 rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-4 py-3 text-sm text-amber-300">
+          {companyDataError}
+        </p>
+      )}
+
+      <p className="mb-5 text-xs leading-5 text-slate-500">
+        {filters.frequency === "anual" ? "Cada par representa um ano completo." : "Cada par representa um trimestre."}
+        {" "}Defasagens de 0, 1, 2 e 4 trimestres; mínimo de {filters.frequency === "anual" ? "5 anos" : "8 trimestres"} para apresentar uma correlação.
+      </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-2xl border border-white/10 bg-[#07111f] p-5">
@@ -234,7 +278,7 @@ export function RelationshipPanel({
           <p className="mt-2 text-xs text-slate-500">
             {
               analysis.classification
-                .interpretation
+                ?.interpretation ?? "Dados insuficientes ou série constante"
             }
           </p>
         </article>
@@ -249,14 +293,13 @@ export function RelationshipPanel({
           </p>
 
           <p className="mt-1 text-2xl font-semibold text-white">
-            {formatLag(
-              analysis.bestLagResult?.lag ??
-                0,
-            )}
+            {analysis.bestLagResult
+              ? formatLag(analysis.bestLagResult.lag)
+              : "—"}
           </p>
 
           <p className="mt-2 text-xs text-slate-500">
-            Maior correlação absoluta encontrada.
+            Maior associação absoluta entre as defasagens avaliadas.
           </p>
         </article>
 
@@ -271,7 +314,7 @@ export function RelationshipPanel({
 
           <p className="mt-1 text-2xl font-semibold text-white">
             {formatDecimal(
-              analysis.regression.rSquared,
+              analysis.regression?.rSquared ?? null,
             )}
           </p>
 
@@ -305,9 +348,7 @@ export function RelationshipPanel({
 
       <div className="mt-6">
         <RelationshipScatterChart
-          points={
-            analysis.relationshipPoints
-          }
+          points={analysis.correlation === null ? [] : analysis.relationshipPoints}
           xLabel={economicIndicatorLabel}
           yLabel={companyMetricLabel}
         />
@@ -321,9 +362,7 @@ export function RelationshipPanel({
             </h4>
 
             <p className="mt-1 text-sm text-slate-500">
-              Quanto tempo o indicador econômico
-              pode levar para se associar ao
-              resultado.
+              Associação observada com o indicador de trimestres anteriores.
             </p>
           </div>
 
@@ -361,7 +400,9 @@ export function RelationshipPanel({
                       analysis.selectedLag;
 
                     const barColor =
-                      result.correlation >= 0
+                      !result.valid
+                        ? "bg-slate-600"
+                        : result.correlation >= 0
                         ? "bg-emerald-400"
                         : "bg-rose-400";
 
@@ -388,14 +429,14 @@ export function RelationshipPanel({
 
                         <td
                           className={`px-5 py-4 text-sm font-semibold ${
-                            result.correlation >= 0
+                            !result.valid
+                              ? "text-slate-500"
+                              : result.correlation >= 0
                               ? "text-emerald-400"
                               : "text-rose-400"
                           }`}
                         >
-                          {formatDecimal(
-                            result.correlation,
-                          )}
+                          {result.valid ? formatDecimal(result.correlation) : "—"}
                         </td>
 
                         <td className="px-5 py-4">
@@ -403,19 +444,18 @@ export function RelationshipPanel({
                             <div
                               className={`h-full rounded-full ${barColor}`}
                               style={{
-                                width: `${Math.max(
-                                  4,
-                                  result.absoluteCorrelation *
-                                    100,
-                                )}%`,
+                                width: result.valid
+                                  ? `${Math.max(4, result.absoluteCorrelation * 100)}%`
+                                  : "0%",
                               }}
                             />
                           </div>
                         </td>
 
                         <td className="px-5 py-4 text-sm text-slate-400">
-                          {result.strength}{" "}
-                          {result.direction}
+                          {result.valid
+                            ? `${result.strength} ${result.direction}`
+                            : "Dados insuficientes ou série constante"}
                         </td>
 
                         <td className="px-5 py-4 text-right text-sm text-slate-400">
@@ -445,22 +485,21 @@ export function RelationshipPanel({
                 </h4>
 
                 <p className="mt-2 text-sm leading-6 text-slate-300">
-                  A maior associação foi
-                  encontrada com{" "}
-                  <strong className="text-white">
-                    {formatLag(
-                      analysis.bestLagResult
-                        ?.lag ?? 0,
-                    )}
-                  </strong>
-                  , apresentando correlação de{" "}
-                  <strong className="text-white">
-                    {formatDecimal(
-                      analysis.bestLagResult
-                        ?.correlation ?? 0,
-                    )}
-                  </strong>
-                  .
+                  {analysis.bestLagResult ? (
+                    <>
+                      A maior associação observada ocorreu com{" "}
+                      <strong className="text-white">
+                        {formatLag(analysis.bestLagResult.lag)}
+                      </strong>
+                      {", com correlação de "}
+                      <strong className="text-white">
+                        {formatDecimal(analysis.bestLagResult.correlation)}
+                      </strong>
+                      {` em ${analysis.bestLagResult.observations} pares válidos.`}
+                    </>
+                  ) : (
+                    "Não há observações suficientes para escolher uma defasagem. Amplie o período ou selecione outras séries."
+                  )}
                 </p>
               </div>
             </div>
@@ -479,10 +518,10 @@ export function RelationshipPanel({
                 </h4>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Correlação histórica não
-                  demonstra causalidade. Outros
-                  fatores podem explicar o
-                  comportamento observado.
+                  Correlação histórica não demonstra causalidade. A escolha
+                  da maior correlação entre várias defasagens é exploratória;
+                  tendências ao longo do tempo e outros fatores podem influenciar
+                  o resultado.
                 </p>
               </div>
             </div>
@@ -494,11 +533,14 @@ export function RelationshipPanel({
             </h4>
 
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Os resultados empresariais ainda são
-              simulados para desenvolvimento.
-              {hasRealEconomicData
-                ? ` O indicador ${economicIndicatorLabel} foi obtido do Banco Central do Brasil.`
-                : ` O indicador ${economicIndicatorLabel} permanece simulado nesta versão.`}
+              {hasRealCompanyData
+                ? `A métrica ${companyMetricLabel} vem da ${companyDataSource}.`
+                : `A métrica ${companyMetricLabel} é simulada.`}
+              {analysis.hasEconomicCoverage
+                ? ` O indicador ${economicIndicatorLabel} vem do Banco Central; trimestres sem dados reais foram excluídos.`
+                : hasRealEconomicData
+                  ? ` O indicador ${economicIndicatorLabel} não tem pares reais válidos no período.`
+                  : ` O indicador ${economicIndicatorLabel} é simulado nesta análise.`}
             </p>
           </article>
         </div>

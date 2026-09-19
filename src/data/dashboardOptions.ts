@@ -48,7 +48,7 @@ export const companyMetricOptions: FilterOption[] = [
   { value: "receita", label: "Receita líquida" },
   { value: "ebitda", label: "EBITDA" },
   { value: "lucro", label: "Lucro líquido" },
-  { value: "margem", label: "Margem líquida" },
+  { value: "margem", label: "Margem EBITDA" },
   { value: "divida", label: "Dívida líquida" },
   { value: "acao", label: "Preço da ação" },
 ];
