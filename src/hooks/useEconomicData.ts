@@ -29,6 +29,12 @@ type EconomicDataState = {
   isSupported: boolean;
 };
 
+type RequestState = {
+  requestKey: string | null;
+  data: EconomicDataResponse | null;
+  error: string | null;
+};
+
 const supportedIndicators = [
   "selic",
   "ipca",
@@ -39,6 +45,19 @@ function isSupportedIndicator(indicator: string) {
   return supportedIndicators.includes(indicator);
 }
 
+function getErrorMessage(result: unknown) {
+  if (
+    typeof result === "object" &&
+    result !== null &&
+    "error" in result &&
+    typeof result.error === "string"
+  ) {
+    return result.error;
+  }
+
+  return "Não foi possível carregar os dados.";
+}
+
 export function useEconomicData(
   indicator: string,
   startYear: string,
@@ -47,36 +66,25 @@ export function useEconomicData(
   const supported =
     isSupportedIndicator(indicator);
 
-  const [state, setState] =
-    useState<EconomicDataState>({
+  const requestKey = supported
+    ? `${indicator}:${startYear}:${endYear}`
+    : null;
+
+  const [requestState, setRequestState] =
+    useState<RequestState>({
+      requestKey: null,
       data: null,
-      isLoading: supported,
       error: null,
-      isSupported: supported,
     });
 
   useEffect(() => {
-    if (!supported) {
-      setState({
-        data: null,
-        isLoading: false,
-        error: null,
-        isSupported: false,
-      });
-
+    if (!supported || !requestKey) {
       return;
     }
 
     const controller = new AbortController();
 
     async function loadEconomicData() {
-      setState({
-        data: null,
-        isLoading: true,
-        error: null,
-        isSupported: true,
-      });
-
       try {
         const searchParams = new URLSearchParams({
           indicator,
@@ -91,20 +99,16 @@ export function useEconomicData(
           },
         );
 
-        const result = await response.json();
+        const result: unknown = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            result.error ??
-              "Não foi possível carregar os dados.",
-          );
+          throw new Error(getErrorMessage(result));
         }
 
-        setState({
+        setRequestState({
+          requestKey,
           data: result as EconomicDataResponse,
-          isLoading: false,
           error: null,
-          isSupported: true,
         });
       } catch (error) {
         if (
@@ -114,14 +118,13 @@ export function useEconomicData(
           return;
         }
 
-        setState({
+        setRequestState({
+          requestKey,
           data: null,
-          isLoading: false,
           error:
             error instanceof Error
               ? error.message
               : "Erro desconhecido.",
-          isSupported: true,
         });
       }
     }
@@ -136,7 +139,29 @@ export function useEconomicData(
     startYear,
     endYear,
     supported,
+    requestKey,
   ]);
 
-  return state;
+  if (!supported || !requestKey) {
+    return {
+      data: null,
+      isLoading: false,
+      error: null,
+      isSupported: false,
+    };
+  }
+
+  const isCurrentRequest =
+    requestState.requestKey === requestKey;
+
+  return {
+    data: isCurrentRequest
+      ? requestState.data
+      : null,
+    isLoading: !isCurrentRequest,
+    error: isCurrentRequest
+      ? requestState.error
+      : null,
+    isSupported: true,
+  };
 }
