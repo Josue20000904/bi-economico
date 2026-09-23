@@ -341,7 +341,7 @@ export function RelationshipPanel({
           </p>
 
           <p className="mt-2 text-xs text-slate-500">
-            Pares válidos utilizados no cálculo.
+            Pares disponíveis no período selecionado.
           </p>
         </article>
       </div>
