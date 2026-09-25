@@ -366,7 +366,113 @@ export function RelationshipPanel({
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="divide-y divide-white/5 md:hidden">
+  {analysis.lagResults.map((result) => {
+    const isSelected =
+      result.lag === analysis.selectedLag;
+
+    const barColor = !result.valid
+      ? "bg-slate-600"
+      : result.correlation >= 0
+        ? "bg-emerald-400"
+        : "bg-rose-400";
+
+    const correlationColor = !result.valid
+      ? "text-slate-500"
+      : result.correlation >= 0
+        ? "text-emerald-400"
+        : "text-rose-400";
+
+    return (
+      <div
+        key={result.lag}
+        className={`p-5 ${
+          isSelected ? "bg-amber-400/[0.06]" : ""
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium text-slate-200">
+                {formatLag(result.lag)}
+              </p>
+
+              {isSelected && (
+                <span className="rounded-full bg-amber-400/10 px-2 py-1 text-[10px] font-semibold uppercase text-amber-300">
+                  Selecionada
+                </span>
+              )}
+            </div>
+
+            <p className="mt-2 text-xs text-slate-500">
+              Interpretação
+            </p>
+
+            <p className="mt-1 text-sm text-slate-300">
+              {result.valid
+                ? `${result.strength} ${result.direction}`
+                : "Dados insuficientes ou série constante"}
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            <p className="text-xs text-slate-500">
+              Correlação
+            </p>
+
+            <p
+              className={`mt-1 text-lg font-semibold ${correlationColor}`}
+            >
+              {result.valid
+                ? formatDecimal(result.correlation)
+                : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span>Intensidade</span>
+
+            <span>
+              {result.valid
+                ? `${Math.round(
+                    result.absoluteCorrelation * 100,
+                  )}%`
+                : "—"}
+            </span>
+          </div>
+
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
+            <div
+              className={`h-full rounded-full ${barColor}`}
+              style={{
+                width: result.valid
+                  ? `${Math.max(
+                      4,
+                      result.absoluteCorrelation * 100,
+                    )}%`
+                  : "0%",
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4 text-xs">
+          <span className="text-slate-500">
+            Observações válidas
+          </span>
+
+          <span className="font-medium text-slate-300">
+            {result.observations}
+          </span>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[620px] text-left">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
